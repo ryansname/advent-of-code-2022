@@ -23,11 +23,11 @@ pub const Parser = struct {
         return Parser{ .source = substring };
     }
 
-    pub fn takeDelimiter(self: *Parser, needles: []const u8) !?u8 {
+    pub fn takeDelimiter(self: *Parser, needles: []const u8) ?u8 {
         if (!self.hasMore()) return null;
 
         const delimiter = self.source[self.index];
-        if (mem.indexOfScalar(u8, needles, delimiter) == null) return error.NotAtDelimiter;
+        if (mem.indexOfScalar(u8, needles, delimiter) == null) return null;
         self.index += 1;
         return delimiter;
     }
@@ -135,3 +135,4 @@ test "parser multiline types" {
     }
     try expectEqual(@as(u64, 4), count);
 }
+
