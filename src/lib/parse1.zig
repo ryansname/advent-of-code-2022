@@ -6,14 +6,7 @@ const eql = std.mem.eql;
 
 pub const Parser = struct {
     source: []const u8,
-    index: usize,
-
-    pub fn init(source: []const u8) Parser {
-        return .{
-            .source = source,
-            .index = 0,
-        };
-    }
+    index: usize = 0,
 
     pub fn hasMore(self: Parser) bool {
         return self.index < self.source.len;
@@ -27,7 +20,7 @@ pub const Parser = struct {
         const substring = self.source[start..self.index];
         self.index += 1; // consume delimiter
 
-        return init(substring);
+        return Parser{ .source = substring };
     }
 
     pub fn takeDelimiter(self: *Parser, needles: []const u8) !?u8 {
