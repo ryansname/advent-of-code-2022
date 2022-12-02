@@ -87,9 +87,9 @@ const expectEqual = std.testing.expectEqual;
 const expectEqualSlices = std.testing.expectEqualSlices;
 const expectEqualStrings = std.testing.expectEqualStrings;
 test "parser take numbers" {
-    var parser = Parser.init(
-        \\123,123,123,123,123,123,123,123
-    );
+    var parser = Parser{ .source = 
+    \\123,123,123,123,123,123,123,123
+    };
 
     var sum: u64 = 0;
     while (try parser.takeType(u64, ",")) |v| {
@@ -99,9 +99,9 @@ test "parser take numbers" {
 }
 
 test "parser take strings" {
-    var parser = Parser.init(
-        \\hi,hi,hi,hi
-    );
+    var parser = Parser{ .source = 
+    \\hi,hi,hi,hi
+    };
 
     var count: u64 = 0;
     while (try parser.takeType([]const u8, ",")) |string| {
@@ -112,11 +112,11 @@ test "parser take strings" {
 }
 
 test "parser multiline types" {
-    var parser = Parser.init(
-        \\123,123,123,123,123,123,123,123
-        \\
-        \\hi,hi,hi,hi
-    );
+    var parser = Parser{ .source = 
+    \\123,123,123,123,123,123,123,123
+    \\
+    \\hi,hi,hi,hi
+    };
 
     var numbers = parser.subparse("\n").?;
     var sum: u64 = 0;
@@ -125,7 +125,7 @@ test "parser multiline types" {
     }
     try expectEqual(@as(u64, 984), sum);
 
-    _ = try parser.takeDelimiter("\n");
+    _ = parser.takeDelimiter("\n").?;
 
     var words = parser.subparse("\n").?;
     var count: u64 = 0;
@@ -135,4 +135,3 @@ test "parser multiline types" {
     }
     try expectEqual(@as(u64, 4), count);
 }
-

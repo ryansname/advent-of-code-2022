@@ -1,24 +1,92 @@
 const std = @import("std");
+const log = std.log;
+const Parser = @import("lib/parse1.zig").Parser;
+
+const input = @embedFile("inputs/day2.txt");
 
 pub fn main() !void {
-    // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
-    std.debug.print("All your day 2 {s} are belong to us.\n", .{"codebase"});
-
-    // stdout is for the actual output of your application, for example if you
-    // are implementing gzip, then only the compressed bytes should be sent to
-    // stdout, not any debugging messages.
-    const stdout_file = std.io.getStdOut().writer();
-    var bw = std.io.bufferedWriter(stdout_file);
-    const stdout = bw.writer();
-
-    try stdout.print("Run `zig build test` to run the tests.\n", .{});
-
-    try bw.flush(); // don't forget to flush!
+    log.info("Part 1: {}", .{try part1(input)});
+    log.info("Part 2: {}", .{try part2(input)});
 }
 
-test "simple test" {
-    var list = std.ArrayList(i32).init(std.testing.allocator);
-    defer list.deinit(); // try commenting this out and see if zig detects the memory leak!
-    try list.append(42);
-    try std.testing.expectEqual(@as(i32, 42), list.pop());
+fn part1(source: []const u8) !u64 {
+    var parser = Parser{ .source = source };
+
+    var index: u64 = 0;
+    var score: u64 = 0;
+    while (index < parser.source.len) {
+        var lhs = parser.source[index];
+        index += 2;
+        var rhs = parser.source[index];
+        index += 2;
+
+        score += switch (rhs) {
+            'X' => 1,
+            'Y' => 2,
+            'Z' => 3,
+            else => 0,
+        };
+
+        if (lhs - 'A' == rhs - 'X') score += 3;
+
+        if (lhs == 'A' and rhs == 'Y') score += 6;
+        if (lhs == 'B' and rhs == 'Z') score += 6;
+        if (lhs == 'C' and rhs == 'X') score += 6;
+    }
+    return score;
+}
+
+fn part2(source: []const u8) !u64 {
+    var parser = Parser{ .source = source };
+
+    var index: u64 = 0;
+    var score: u64 = 0;
+    while (index < parser.source.len) {
+        var lhs = parser.source[index];
+        index += 2;
+        var outcome = parser.source[index];
+        index += 2;
+
+        // Rock = 1
+        // Paper = 2
+        // Scissors = 3
+
+        score += switch (lhs) {
+            'A' => switch (outcome) { // rock
+                'X' => 0 + 3, // lose
+                'Y' => 3 + 1, // draw,
+                'Z' => 6 + 2, // win,
+                else => 0,
+            },
+            'B' => switch (outcome) { // paper
+                'X' => 0 + 1,
+                'Y' => 3 + 2,
+                'Z' => 6 + 3,
+                else => 0,
+            },
+            'C' => switch (outcome) { // scissors
+                'X' => 0 + 2,
+                'Y' => 3 + 3,
+                'Z' => 6 + 1,
+                else => 0,
+            },
+            else => std.debug.panic("", .{}),
+        };
+    }
+    return score;
+}
+
+test "part1" {
+    try std.testing.expectEqual(@as(u64, 15), try part1(
+        \\A Y
+        \\B X
+        \\C Z
+    ));
+}
+test "part2" {
+    try std.testing.expectEqual(@as(u64, 12), try part2(
+        \\A Y
+        \\B X
+        \\C Z
+    ));
 }

@@ -32,4 +32,3 @@ pub fn main() !void {
     log.info("Part 1: {}", .{max1});
     log.info("Part 2: {}", .{max1 + max2 + max3});
 }
-
