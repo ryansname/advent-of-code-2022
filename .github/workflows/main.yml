@@ -1,0 +1,20 @@
+on:
+  push:
+    branches:
+    - main
+
+jobs:
+  run_all:
+    name: Run all
+    runs-on: ubuntu-latest
+    steps:
+    - name: Setup Zig
+      # You may pin to the exact commit or the version.
+      # uses: goto-bus-stop/setup-zig@869a4299cf8ac7db4ebffaec36ad82a682f88acb
+      uses: goto-bus-stop/setup-zig@v2.0.1
+      with:
+        # Version of the zig compiler to use (must be 0.3.0 or up)
+        version: 0.10.0
+    - name: Run solutions
+      run: zig build run-all
+      
