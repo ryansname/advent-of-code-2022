@@ -7,6 +7,7 @@ const Parser = @import("lib/parse1.zig").Parser;
 const input = @embedFile("inputs/day3.txt");
 
 pub fn main() !void {
+    log.info("{s}", .{@src().file});
     log.info("Part 1: {}", .{try part1(input)});
     log.info("Part 2: {}", .{try part2(input)});
 }

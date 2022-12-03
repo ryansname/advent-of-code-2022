@@ -29,6 +29,7 @@ pub fn main() !void {
             total = 0;
         }
     }
+    log.info("{s}", .{@src().file});
     log.info("Part 1: {}", .{max1});
     log.info("Part 2: {}", .{max1 + max2 + max3});
 }
