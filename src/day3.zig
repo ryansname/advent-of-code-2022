@@ -33,7 +33,11 @@ fn part1(source: []const u8) !u64 {
         var i: usize = 0;
         while (i < left.len) : (i += 1) {
             if (left[i] > 0 and right[i] > 0) {
-                result += if (i >= 'A' and i <= 'Z') i - 'A' + 27 else if (i >= 'a' and i <= 'z') i - 'a' + 1 else unreachable;
+                result += switch (i) {
+                    'a'...'z' => i - 'a' + 1,
+                    'A'...'Z' => i - 'A' + 27,
+                    else => unreachable,
+                };
             }
         }
     }
@@ -53,7 +57,11 @@ fn part2(source: []const u8) !u64 {
         var i: usize = 0;
         while (i < sacks[0].len) : (i += 1) {
             if (sacks[0][i] > 0 and sacks[1][i] > 0 and sacks[2][i] > 0) {
-                result += if (i >= 'A' and i <= 'Z') i - 'A' + 27 else if (i >= 'a' and i <= 'z') i - 'a' + 1 else unreachable;
+                result += switch (i) {
+                    'a'...'z' => i - 'a' + 1,
+                    'A'...'Z' => i - 'A' + 27,
+                    else => unreachable,
+                };
             }
         }
     }
