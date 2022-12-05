@@ -32,8 +32,8 @@ pub const Parser = struct {
         return delimiter;
     }
 
-    pub fn skipSequence(self: *Parser, sequence: []const u8) !void {
-        for (sequence) |_, i| _ = try self.takeDelimiter(sequence[i .. i + 1]);
+    pub fn skipSequence(self: *Parser, sequence: []const u8) void {
+        for (sequence) |_, i| _ = self.takeDelimiter(sequence[i .. i + 1]);
     }
 
     pub fn takeType(self: *Parser, comptime T: type, needles: []const u8) !?T {
