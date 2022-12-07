@@ -56,4 +56,3 @@ test "part2" {
     try std.testing.expectEqual(@as(u64, 29), try part2("nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg"));
     try std.testing.expectEqual(@as(u64, 26), try part2("zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw"));
 }
-
