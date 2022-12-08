@@ -64,33 +64,23 @@ fn part1(source: []const u8) !u64 {
     var row: usize = 0;
     while (row < puzzle.height) : (row += 1) {
         var col: usize = 0;
-        while (col < puzzle.width) : (col += 1) {
+        next_tree: while (col < puzzle.width) : (col += 1) {
             const i = puzzle.start + puzzle.stride * row + col;
             const this_height = puzzle.data[i];
 
-            var visible = false;
-            var test_i = i - puzzle.stride;
-            visible = visible or while (puzzle.data[test_i] != 0) : (test_i -= puzzle.stride) {
-                if (this_height <= puzzle.data[test_i]) break false;
-            } else true;
-
-            test_i = i + puzzle.stride;
-            visible = visible or while (puzzle.data[test_i] != 0) : (test_i += puzzle.stride) {
-                if (this_height <= puzzle.data[test_i]) break false;
-            } else true;
-
-            test_i = i + 1;
-            visible = visible or while (puzzle.data[test_i] != 0) : (test_i += 1) {
-                if (this_height <= puzzle.data[test_i]) break false;
-            } else true;
-
-            test_i = i - 1;
-            visible = visible or while (puzzle.data[test_i] != 0) : (test_i -= 1) {
-                if (this_height <= puzzle.data[test_i]) break false;
-            } else true;
-
-            // log.warn("Testing vs {} = {}", .{ this_height, visible });
-            if (visible) result += 1;
+            const deltas = .{ puzzle.stride, 1 };
+            const ops = .{ math.sub, math.add };
+            inline for (deltas) |delta| {
+                inline for (ops) |op| {
+                    var test_i = try op(usize, i, delta);
+                    while (puzzle.data[test_i] != 0) : (test_i = try op(usize, test_i, delta)) {
+                        if (this_height <= puzzle.data[test_i]) break;
+                    } else {
+                        result += 1;
+                        continue :next_tree;
+                    }
+                }
+            }
         }
     }
 
@@ -107,42 +97,25 @@ fn part2(source: []const u8) !u64 {
     var row: usize = 0;
     while (row < puzzle.height) : (row += 1) {
         var col: usize = 0;
-        while (col < puzzle.width) : (col += 1) {
+        next_tree: while (col < puzzle.width) : (col += 1) {
             const i = puzzle.start + puzzle.stride * row + col;
             const this_height = puzzle.data[i];
             var this_score: u64 = 1;
 
-            var dir_score: u64 = 0;
-            var test_i = i - puzzle.stride;
-            while (puzzle.data[test_i] != 0) : (test_i -= puzzle.stride) {
-                dir_score += 1;
-                if (this_height <= puzzle.data[test_i]) break;
+            const deltas = .{ puzzle.stride, 1 };
+            const ops = .{ math.sub, math.add };
+            inline for (deltas) |delta| {
+                inline for (ops) |op| {
+                    var dir_score: u64 = 0;
+                    var test_i = try op(usize, i, delta);
+                    while (puzzle.data[test_i] != 0) : (test_i = try op(usize, test_i, delta)) {
+                        dir_score += 1;
+                        if (this_height <= puzzle.data[test_i]) break;
+                    }
+                    if (dir_score == 0) continue :next_tree;
+                    this_score *= dir_score;
+                }
             }
-            this_score *= dir_score;
-
-            dir_score = 0;
-            test_i = i + puzzle.stride;
-            while (puzzle.data[test_i] != 0) : (test_i += puzzle.stride) {
-                dir_score += 1;
-                if (this_height <= puzzle.data[test_i]) break;
-            }
-            this_score *= dir_score;
-
-            dir_score = 0;
-            test_i = i + 1;
-            while (puzzle.data[test_i] != 0) : (test_i += 1) {
-                dir_score += 1;
-                if (this_height <= puzzle.data[test_i]) break;
-            }
-            this_score *= dir_score;
-
-            dir_score = 0;
-            test_i = i - 1;
-            while (puzzle.data[test_i] != 0) : (test_i -= 1) {
-                dir_score += 1;
-                if (this_height <= puzzle.data[test_i]) break;
-            }
-            this_score *= dir_score;
 
             // log.warn("Testing vs {} = {}", .{ this_height, visible });
             if (this_score > result) result = this_score;
