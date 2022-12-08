@@ -68,17 +68,19 @@ fn part1(source: []const u8) !u64 {
             const i = puzzle.start + puzzle.stride * row + col;
             const this_height = puzzle.data[i];
 
-            const deltas = .{ puzzle.stride, 1 };
-            const ops = .{ math.sub, math.add };
-            inline for (deltas) |delta| {
-                inline for (ops) |op| {
-                    var test_i = try op(usize, i, delta);
-                    while (puzzle.data[test_i] != 0) : (test_i = try op(usize, test_i, delta)) {
-                        if (this_height <= puzzle.data[test_i]) break;
-                    } else {
-                        result += 1;
-                        continue :next_tree;
-                    }
+            const moves = .{
+                .{ .delta = puzzle.stride, .op = math.sub },
+                .{ .delta = puzzle.stride, .op = math.add },
+                .{ .delta = 1, .op = math.sub },
+                .{ .delta = 1, .op = math.add },
+            };
+            inline for (moves) |move| {
+                var test_i = try move.op(usize, i, move.delta);
+                while (puzzle.data[test_i] != 0) : (test_i = try move.op(usize, test_i, move.delta)) {
+                    if (this_height <= puzzle.data[test_i]) break;
+                } else {
+                    result += 1;
+                    continue :next_tree;
                 }
             }
         }
@@ -102,19 +104,21 @@ fn part2(source: []const u8) !u64 {
             const this_height = puzzle.data[i];
             var this_score: u64 = 1;
 
-            const deltas = .{ puzzle.stride, 1 };
-            const ops = .{ math.sub, math.add };
-            inline for (deltas) |delta| {
-                inline for (ops) |op| {
-                    var dir_score: u64 = 0;
-                    var test_i = try op(usize, i, delta);
-                    while (puzzle.data[test_i] != 0) : (test_i = try op(usize, test_i, delta)) {
-                        dir_score += 1;
-                        if (this_height <= puzzle.data[test_i]) break;
-                    }
-                    if (dir_score == 0) continue :next_tree;
-                    this_score *= dir_score;
+            const moves = .{
+                .{ .delta = puzzle.stride, .op = math.sub },
+                .{ .delta = puzzle.stride, .op = math.add },
+                .{ .delta = 1, .op = math.sub },
+                .{ .delta = 1, .op = math.add },
+            };
+            inline for (moves) |move| {
+                var dir_score: u64 = 0;
+                var test_i = try move.op(usize, i, move.delta);
+                while (puzzle.data[test_i] != 0) : (test_i = try move.op(usize, test_i, move.delta)) {
+                    dir_score += 1;
+                    if (this_height <= puzzle.data[test_i]) break;
                 }
+                if (dir_score == 0) continue :next_tree;
+                this_score *= dir_score;
             }
 
             // log.warn("Testing vs {} = {}", .{ this_height, visible });
