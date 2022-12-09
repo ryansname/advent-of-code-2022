@@ -31,68 +31,19 @@ fn addHit(hits: *std.AutoHashMap(u64, void), loc: V2) !void {
 
 const V2 = struct { x: i32, y: i32 };
 fn part1(source: []const u8) !u64 {
-    var parser = Parser{ .source = source };
-
-    var hits = std.AutoHashMap(u64, void).init(alloc);
-    defer hits.deinit();
-
-    var head = V2{ .x = 0, .y = 0 };
-    var tail = V2{ .x = 0, .y = 0 };
-    try addHit(&hits, tail);
-
-    while (parser.hasMore()) {
-        var line = parser.subparse("\n") orelse unreachable;
-
-        const dir = try line.takeType([]const u8, " ") orelse unreachable;
-        var amount = try line.takeType(u32, "\n") orelse unreachable;
-
-        while (amount > 0) : (amount -= 1) {
-            switch (dir[0]) {
-                'U' => {
-                    head.y -= 1;
-                    if (tail.y > head.y + 1) {
-                        tail.y = head.y + 1;
-                        tail.x = head.x;
-                    }
-                },
-                'D' => {
-                    head.y += 1;
-                    if (tail.y < head.y - 1) {
-                        tail.y = head.y - 1;
-                        tail.x = head.x;
-                    }
-                },
-                'L' => {
-                    head.x -= 1;
-                    if (tail.x > head.x + 1) {
-                        tail.x = head.x + 1;
-                        tail.y = head.y;
-                    }
-                },
-                'R' => {
-                    head.x += 1;
-                    if (tail.x < head.x - 1) {
-                        tail.x = head.x - 1;
-                        tail.y = head.y;
-                    }
-                },
-                else => unreachable,
-            }
-            // log.warn("Head {} {}, tail {} {}", .{ head.x, head.y, tail.x, tail.y });
-            try addHit(&hits, tail);
-        }
-    }
-
-    return hits.count();
+    return solve(source, 2);
 }
 
 fn part2(source: []const u8) !u64 {
+    return solve(source, 10);
+}
+
+fn solve(source: []const u8, comptime knots: usize) !u64 {
     var parser = Parser{ .source = source };
 
     var hits = std.AutoHashMap(u64, void).init(alloc);
     defer hits.deinit();
 
-    const knots = 10;
     var snake = [_]V2{.{ .x = 0, .y = 0 }} ** knots;
     var head = &snake[0];
     var tail = &snake[knots - 1];
