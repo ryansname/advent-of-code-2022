@@ -23,10 +23,8 @@ fn parse(parser: *Parser) !Puzzle {
     return Puzzle{};
 }
 
-fn addHit(hits: *std.AutoHashMap(u64, void), loc: V2) !void {
-    const offset = math.maxInt(u31);
-    var key = (@intCast(u64, (@intCast(i64, loc.x) + offset)) << 32) + @intCast(u64, @intCast(i64, loc.y) + offset);
-    try hits.put(key, {});
+fn addHit(hits: *std.AutoHashMap(V2, void), loc: V2) !void {
+    try hits.put(loc, {});
 }
 
 const V2 = struct { x: i32, y: i32 };
@@ -41,7 +39,7 @@ fn part2(source: []const u8) !u64 {
 fn solve(source: []const u8, comptime knots: usize) !u64 {
     var parser = Parser{ .source = source };
 
-    var hits = std.AutoHashMap(u64, void).init(alloc);
+    var hits = std.AutoHashMap(V2, void).init(alloc);
     defer hits.deinit();
 
     var snake = [_]V2{.{ .x = 0, .y = 0 }} ** knots;
