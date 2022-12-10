@@ -24,8 +24,8 @@ pub fn build(b: *std.build.Builder) void {
     var latest_mtime: i128 = 0;
     comptime var i: u8 = 1;
     inline while (i <= 25) : (i += 1) {
-        const i_string = [_]u8{i + '0'};
-        const source_file = "src/day" ++ i_string ++ ".zig";
+        const i_string = b.fmt("{}", .{i});
+        const source_file = b.fmt("src/day{s}.zig", .{i_string});
 
         const day_stat = cwd.statFile(source_file);
 
@@ -41,7 +41,7 @@ pub fn build(b: *std.build.Builder) void {
             }
         } else |err| {
             if (err != error.FileNotFound) {
-                std.debug.panic("Error opening file " ++ source_file ++ ": {}", .{err});
+                std.debug.panic("Error opening file {s}: {}", .{ source_file, err });
             }
         }
     }
@@ -53,13 +53,13 @@ fn addSingleDay(
     b: *std.build.Builder,
     target: std.zig.CrossTarget,
     mode: std.builtin.Mode,
-    i_string: anytype,
-    source_file: anytype,
+    i_string: []const u8,
+    source_file: []const u8,
 ) struct {
     exe_tests: *std.build.LibExeObjStep,
     run_cmd: *std.build.RunStep,
 } {
-    const exe = b.addExecutable("advent-of-code-2022-day-" ++ i_string, source_file);
+    const exe = b.addExecutable(b.fmt("advent-of-code-2022-day-{s}", .{i_string}), source_file);
     exe.setTarget(target);
     exe.setBuildMode(mode);
     exe.install();
@@ -70,7 +70,7 @@ fn addSingleDay(
         run_cmd.addArgs(args);
     }
 
-    const run_step = b.step("run-" ++ i_string, "Run the puzzle from day " ++ i_string);
+    const run_step = b.step(b.fmt("run-{s}", .{i_string}), b.fmt("Run the puzzle from day {s}", .{i_string}));
     run_step.dependOn(&run_cmd.step);
 
     const exe_tests = b.addTest(source_file);
