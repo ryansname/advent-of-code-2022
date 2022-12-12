@@ -20,14 +20,15 @@ pub fn build(b: *std.build.Builder) void {
     var latest_run_step: ?*std.build.RunStep = null;
 
     var cwd = fs.cwd();
+    var root = cwd.openDir(b.build_root, .{}) catch unreachable;
 
     var latest_mtime: i128 = 0;
     comptime var i: u8 = 1;
     inline while (i <= 25) : (i += 1) {
-        const i_string = b.fmt("{}", .{i});
+        const i_string = b.fmt("{:0>2}", .{i});
         const source_file = b.fmt("src/day{s}.zig", .{i_string});
 
-        const day_stat = cwd.statFile(source_file);
+        const day_stat = root.statFile(source_file);
 
         if (day_stat) |stat| {
             const day_build = addSingleDay(b, target, mode, i_string, source_file);
