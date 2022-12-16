@@ -1,9 +1,10 @@
 const debug = std.debug;
 const fmt = std.fmt;
-const std = @import("std");
 const log = std.log;
 const math = std.math;
 const mem = std.mem;
+const std = @import("std");
+const sort = std.sort;
 
 const BoundedArray = std.BoundedArray;
 
@@ -129,16 +130,41 @@ fn part1(source: []const u8) !u64 {
     return result;
 }
 
-/// Part 2 is essentially asking for the path from the top to any 'a', with a different filter
 fn part2(source: []const u8) !u64 {
-    return source.len * 0;
+    var parser = Parser{ .source = source };
+
+    var lines = std.ArrayListUnmanaged([]const u8){};
+    try lines.append(alloc, "[[2]]");
+    try lines.append(alloc, "[[6]]");
+
+    while (parser.line()) |line| {
+        if (line.len == 0) continue;
+        try lines.append(alloc, line);
+    }
+
+    const sortFn = struct {
+        fn sortFn(context: void, left: []const u8, right: []const u8) bool {
+            _ = context;
+            return packetsAreValid2(left, right);
+        }
+    }.sortFn;
+    sort.sort([]const u8, lines.items, {}, sortFn);
+
+    var result: u64 = 1;
+    for (lines.items) |line, i| {
+        if (mem.eql(u8, line, "[[2]]") or mem.eql(u8, line, "[[6]]")) {
+            result *= i + 1;
+        }
+    }
+
+    return result;
 }
 
 test "part1" {
     try std.testing.expectEqual(@as(u64, 13), try part1(test_input));
 }
 test "part2" {
-    try std.testing.expectEqual(@as(u64, 0), try part2(test_input));
+    try std.testing.expectEqual(@as(u64, 140), try part2(test_input));
 }
 
 const test_input =
