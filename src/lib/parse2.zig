@@ -4,6 +4,8 @@ const assert = std.debug.assert;
 const mem = std.mem;
 const eql = std.mem.eql;
 
+const log = std.log.scoped(.Parser);
+
 pub const Parser = struct {
     source: []const u8,
     index: usize = 0,
@@ -13,6 +15,10 @@ pub const Parser = struct {
     }
 
     pub fn ignore(self: *Parser, string: []const u8) void {
+        const ignored = self.source[self.index..(self.index + string.len)];
+        if (!std.mem.eql(u8, string, ignored)) {
+            log.warn("Ignored '{s}' vs '{s}'", .{ ignored, string });
+        }
         self.index += string.len;
     }
 
@@ -30,7 +36,7 @@ pub const Parser = struct {
         if (!self.hasMore()) return null;
         if (self.source[self.index] == '\n') return null;
 
-        const needles = " -,\n";
+        const needles = " ,:\n";
 
         const start = self.index;
         self.index = mem.indexOfAnyPos(u8, self.source, self.index, needles) orelse self.source.len;
