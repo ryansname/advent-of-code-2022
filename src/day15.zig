@@ -130,10 +130,10 @@ fn part1(source: []const u8, row: i64) !u64 {
     return impossible_count;
 }
 
-fn getColumnWithScannedGap(readings: []Reading, row: i64, col_min: i64, col_max: i64) !?i64 {
-    var sensed_mins = try ArrayListUnmanaged(i64).initCapacity(alloc, readings.len);
+fn getColumnWithScannedGap(fast_alloc: std.mem.Allocator, readings: []Reading, row: i64, col_min: i64, col_max: i64) !?i64 {
+    var sensed_mins = try ArrayListUnmanaged(i64).initCapacity(fast_alloc, readings.len);
     defer sensed_mins.deinit(alloc);
-    var sensed_maxs = try ArrayListUnmanaged(i64).initCapacity(alloc, readings.len);
+    var sensed_maxs = try ArrayListUnmanaged(i64).initCapacity(fast_alloc, readings.len);
     defer sensed_maxs.deinit(alloc);
 
     for (readings) |r| {
@@ -177,10 +177,12 @@ fn part2(source: []const u8, bounding_box_len: u63) !u64 {
     var node = progress.start("Scanning rows to find hole", bounding_box_len);
     defer node.end();
 
+    var fastAlloc = std.heap.stackFallback(1_000_000, alloc);
+    
     var row: i64 = 0;
     const col = while (row < bounding_box_len) : (row += 1) {
         defer node.completeOne();
-        if (try getColumnWithScannedGap(readings, row, 0, bounding_box_len)) |c| break c;
+        if (try getColumnWithScannedGap(fastAlloc.get(), readings, row, 0, bounding_box_len)) |c| break c;
     } else unreachable;
 
     return @intCast(u64, col * 4000000 + row);
