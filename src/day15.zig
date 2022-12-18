@@ -177,12 +177,12 @@ fn part2(source: []const u8, bounding_box_len: u63) !u64 {
     var node = progress.start("Scanning rows to find hole", bounding_box_len);
     defer node.end();
 
-    var fastAlloc = std.heap.stackFallback(1_000_000, alloc);
+    var fast_alloc = std.heap.stackFallback(1_000_000, alloc);
     
     var row: i64 = 0;
     const col = while (row < bounding_box_len) : (row += 1) {
         defer node.completeOne();
-        if (try getColumnWithScannedGap(fastAlloc.get(), readings, row, 0, bounding_box_len)) |c| break c;
+        if (try getColumnWithScannedGap(fast_alloc.get(), readings, row, 0, bounding_box_len)) |c| break c;
     } else unreachable;
 
     return @intCast(u64, col * 4000000 + row);
