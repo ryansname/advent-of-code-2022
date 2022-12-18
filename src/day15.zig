@@ -132,9 +132,9 @@ fn part1(source: []const u8, row: i64) !u64 {
 
 fn getColumnWithScannedGap(fast_alloc: std.mem.Allocator, readings: []Reading, row: i64, col_min: i64, col_max: i64) !?i64 {
     var sensed_mins = try ArrayListUnmanaged(i64).initCapacity(fast_alloc, readings.len);
-    defer sensed_mins.deinit(alloc);
+    defer sensed_mins.deinit(fast_alloc);
     var sensed_maxs = try ArrayListUnmanaged(i64).initCapacity(fast_alloc, readings.len);
-    defer sensed_maxs.deinit(alloc);
+    defer sensed_maxs.deinit(fast_alloc);
 
     for (readings) |r| {
         const clear_distance = try math.absInt(r.beacon.x - r.sensor.x) + try math.absInt(r.beacon.y - r.sensor.y);
@@ -177,7 +177,7 @@ fn part2(source: []const u8, bounding_box_len: u63) !u64 {
     var node = progress.start("Scanning rows to find hole", bounding_box_len);
     defer node.end();
 
-    var fast_alloc = std.heap.stackFallback(1_000_000, alloc);
+    var fast_alloc = std.heap.stackFallback(10000, alloc);
     
     var row: i64 = 0;
     const col = while (row < bounding_box_len) : (row += 1) {
