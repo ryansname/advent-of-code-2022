@@ -36,7 +36,7 @@ pub const Parser = struct {
         if (!self.hasMore()) return null;
         if (self.source[self.index] == '\n') return null;
 
-        const needles = " ,:\n";
+        const needles = " ,:;\n";
 
         const start = self.index;
         self.index = mem.indexOfAnyPos(u8, self.source, self.index, needles) orelse self.source.len;
