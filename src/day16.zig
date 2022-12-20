@@ -115,6 +115,7 @@ fn populateIndirectNeighbours(world: *World) !void {
 
     for (world.useful_nodes.slice()) |useful_node_idx| for (world.useful_nodes.slice()) |dest_idx| {
         const distance = world.distances[useful_node_idx][dest_idx];
+        world.distances[useful_node_idx][0] = 250;
         if (distance == UNKNOWN_DISTANCE) continue;
         // log.warn("Distance from {s} to {s} = {}", .{ indexToKey(useful_node_idx), indexToKey(dest_idx), distance });
     };
@@ -162,52 +163,101 @@ const Actor = struct {
     dest_idx: usize,
     time_remaining: u32,
 
-    fn step(self: Actor) Actor {
-        return .{ .dest_idx = self.dest_idx, .time_remaining = self.time_remaining - 1 };
+    fn step(self: Actor, steps: u32) Actor {
+        return .{ .dest_idx = self.dest_idx, .time_remaining = self.time_remaining - steps };
     }
 };
-fn solveForWorld2(world: *World, me: Actor, elephant: Actor, score_so_far: u64, time_remaining: u32, score_per_time: u64, enabled_flags: []bool) u64 {
-    if (time_remaining == 0) return score_so_far;
-
-    log.warn("At time remaining = {}, I am {}, score is {}", .{ time_remaining, me, score_so_far });
-
+fn solveForWorld2(world: *World, me: Actor, elephant: Actor, score_so_far: u64, time_remaining: u32, enabled_flags: []bool) u64 {
     inline for (.{ me, elephant }) |actor, idx| {
         if (actor.time_remaining == 0) {
-            var best_score: usize = score_so_far;
+            const new_score = score_so_far + time_remaining * world.flow_rates[actor.dest_idx];
+
+            var best_score: usize = new_score;
             for (world.useful_nodes.slice()) |useful_node_idx| if (!enabled_flags[useful_node_idx]) {
                 enabled_flags[useful_node_idx] = true;
                 defer enabled_flags[useful_node_idx] = false;
 
+                const distances = &world.distances;
+                const time_to_node = distances[actor.dest_idx][useful_node_idx];
+
+                if (time_to_node > time_remaining) continue;
+
                 const next_actor = .{
                     .dest_idx = useful_node_idx,
-                    .time_remaining = (&(world.distances[actor.dest_idx])[useful_node_idx]).*,
+                    .time_remaining = time_to_node + 1,
                 };
 
                 const score = solveForWorld2(
                     world,
                     if (idx == 0) next_actor else me,
                     if (idx == 0) elephant else next_actor,
-                    score_so_far,
+                    new_score,
                     time_remaining,
-                    score_per_time + world.flow_rates[actor.dest_idx],
                     enabled_flags,
                 );
                 best_score = @max(best_score, score);
             };
-            return best_score;
+
+            const next_actor = .{
+                .dest_idx = 0,
+                .time_remaining = math.maxInt(u32),
+            };
+            const do_nothing_score = solveForWorld2(
+                world,
+                if (idx == 0) next_actor else me,
+                if (idx == 0) elephant else next_actor,
+                new_score,
+                time_remaining,
+                enabled_flags,
+            );
+
+            return @max(best_score, do_nothing_score);
         }
     }
 
+    if (time_remaining == 0) {
+        return score_so_far;
+    }
+
     // log.warn("{any}", .{enabled_flags});
+    const steps = math.min3(time_remaining, me.time_remaining, elephant.time_remaining);
     return solveForWorld2(
         world,
-        me.step(),
-        elephant.step(),
-        score_so_far + score_per_time,
-        time_remaining - 1,
-        score_per_time,
+        me.step(steps),
+        elephant.step(steps),
+        score_so_far,
+        time_remaining - steps,
         enabled_flags,
     );
+}
+
+fn solveForWorld3(world: *World, here_idx: usize, score_so_far: u64, time_remaining: u32, score_per_time: u64, enabled_flags: []bool, total_time: u32) u64 {
+    const distances = world.distances[here_idx];
+
+    const score_at_end = score_so_far + time_remaining * score_per_time;
+    var best_score: u64 = score_at_end + if (total_time > 0) solveForWorld3(world, 0, 0, total_time, 0, enabled_flags, 0) else 0;
+    for (world.useful_nodes.slice()) |useful_node_idx| if (useful_node_idx != here_idx and !enabled_flags[useful_node_idx]) {
+        // If there's enough time to get to the node and activate it
+        const time_to_activate_node = distances[useful_node_idx] + 1;
+        if (time_remaining > time_to_activate_node) {
+            enabled_flags[useful_node_idx] = true;
+            defer enabled_flags[useful_node_idx] = false;
+
+            const score = solveForWorld3(
+                world,
+                useful_node_idx,
+                score_so_far + time_to_activate_node * score_per_time,
+                time_remaining - time_to_activate_node,
+                score_per_time + world.flow_rates[useful_node_idx],
+                enabled_flags,
+                total_time,
+            );
+
+            best_score = @max(best_score, score);
+        }
+    };
+
+    return best_score;
 }
 
 fn part2(source: []const u8) !u64 {
@@ -220,14 +270,23 @@ fn part2(source: []const u8) !u64 {
     mem.set(bool, enabled_flags, false);
     enabled_flags[0] = true;
 
-    return solveForWorld2(
+    // 2827 too low
+    // 2833 nope
+    // 2834 nope
+    // 2835 nope
+    // 2836 nope
+    // 2837 nope
+    // 2838 yay...
+    // 2839 too high
+    const time = 26;
+    return solveForWorld3(
         &world,
-        .{ .dest_idx = 0, .time_remaining = 0 },
-        .{ .dest_idx = 0, .time_remaining = 300 },
         0,
-        10,
+        0,
+        time,
         0,
         enabled_flags,
+        time,
     );
 }
 
