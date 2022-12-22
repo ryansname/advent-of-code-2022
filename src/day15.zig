@@ -178,7 +178,7 @@ fn part2(source: []const u8, bounding_box_len: u63) !u64 {
     defer node.end();
 
     var fast_alloc = std.heap.stackFallback(10000, alloc);
-    
+
     var row: i64 = 0;
     const col = while (row < bounding_box_len) : (row += 1) {
         defer node.completeOne();
